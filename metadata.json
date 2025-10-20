@@ -1,0 +1,7 @@
+{
+  "name": "Vedoice AI",
+  "description": "A professional voice AI studio to generate, clone, and narrate voices with realistic emotional tones.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

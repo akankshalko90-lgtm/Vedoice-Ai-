@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vedoice AI – Where Emotions Speak</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^0.14.0",
+    "lamejs": "https://esm.sh/lamejs@1.2.1",
+    "@codemirror/state": "https://esm.sh/@codemirror/state@^6.4.1",
+    "@codemirror/view": "https://esm.sh/@codemirror/view@^6.28.0",
+    "@codemirror/commands": "https://esm.sh/@codemirror/commands@^6.6.0",
+    "@codemirror/language": "https://esm.sh/@codemirror/language@^6.10.2",
+    "@codemirror/autocomplete": "https://esm.sh/@codemirror/autocomplete@^6.17.0",
+    "@codemirror/theme-one-dark": "https://esm.sh/@codemirror/theme-one-dark@^6.1.2",
+    "@lezer/highlight": "https://aistudiocdn.com/@lezer/highlight@^1.2.2",
+    "react": "https://esm.sh/react@18.3.1",
+    "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+    <script type="module" src="index.tsx"></script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="app-container">
+        <header>
+            <div class="logo">
+                <svg class="logo-svg" width="50" height="50" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="logoGradient" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#6366F1"/>
+                            <stop offset="1" stop-color="#A855F7"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M50 15 C 60 35, 40 65, 50 85" stroke="url(#logoGradient)" stroke-width="12" stroke-linecap="round"/>
+                    <path d="M30 30 C 35 45, 25 60, 30 70" stroke="url(#logoGradient)" stroke-width="12" stroke-linecap="round" opacity="0.7"/>
+                    <path d="M70 30 C 65 45, 75 60, 70 70" stroke="url(#logoGradient)" stroke-width="12" stroke-linecap="round" opacity="0.7"/>
+                </svg>
+                <h1>Vedoice AI</h1>
+            </div>
+            <p class="tagline">🎙️ Where Emotions Speak in Every Language</p>
+        </header>
+
+        <main>
+            <div class="studio-panel" id="editor-panel">
+                <div class="loading-overlay hidden">
+                    <div class="spinner"></div>
+                    <div id="generation-log-container" class="hidden">
+                        <h3>Generation Log</h3>
+                        <div id="generation-log"></div>
+                    </div>
+                </div>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="tts">Text-to-Speech</button>
+                    <button class="tab-btn" data-tab="story">Story</button>
+                    <button class="tab-btn" data-tab="poetry">Poetry</button>
+                </div>
+
+                <div class="tab-content active" id="tts-content">
+                     <div class="editor-header">
+                         <h2>Script Editor</h2>
+                         <div class="toolbar-container" data-editor-id="tts"></div>
+                     </div>
+                     <div class="editor-container" id="script-input-container"></div>
+                     <div class="editor-footer">
+                        <span class="editor-char-count" data-editor-id="tts">Chars: 0</span>
+                     </div>
+                </div>
+                <div class="tab-content" id="story-content">
+                    <div class="story-layout-grid">
+                        <div class="story-settings-column">
+                            <div class="setting-item">
+                                <label>Story Mode</label>
+                                <div class="radio-group" id="story-mode-selector">
+                                    <input type="radio" id="mode-multi" name="story-mode" value="multi" checked>
+                                    <label for="mode-multi">Multi-Speaker</label>
+                                    <input type="radio" id="mode-single" name="story-mode" value="single">
+                                    <label for="mode-single">Single Speaker</label>
+                                    <input type="radio" id="mode-ai" name="story-mode" value="ai">
+                                    <label for="mode-ai">AI Director</label>
+                                </div>
+                            </div>
+                             <div id="dialogue-language-settings">
+                                <div class="settings-grid" style="margin-bottom: 1rem; grid-template-columns: 1fr 1fr;">
+                                   <div class="setting-item">
+                                       <label for="multi-story-country-select">Country</label>
+                                       <select id="multi-story-country-select">
+                                           <option value="US" selected>United States</option>
+                                           <option value="IN">India</option>
+                                           <option value="ES">Spain</option>
+                                           <option value="FR">France</option>
+                                           <option value="DE">Germany</option>
+                                           <option value="JP">Japan</option>
+                                           <option value="CN">China</option>
+                                       </select>
+                                   </div>
+                                   <div class="setting-item">
+                                       <label for="multi-story-language-select">Language</label>
+                                       <div class="select-wrapper">
+                                           <select id="multi-story-language-select"></select>
+                                       </div>
+                                   </div>
+                                </div>
+                             </div>
+                            <div class="setting-item hidden" id="ai-director-options" style="margin-bottom: 1rem;">
+                                <label class="switch-label">
+                                    <input type="checkbox" id="ai-creative-toggle" checked>
+                                    <span class="switch-slider"></span>
+                                    AI Creative Freedom
+                                </label>
+                                <p class="setting-description" style="margin-top: 0.5rem; margin-bottom: 0;">
+                                    Enabled: AI follows [DIRECTOR'S NOTE] instructions and creatively interprets the script.<br>Disabled: AI strictly reads dialogue, ignoring notes.
+                                </p>
+                            </div>
+                             <div id="multi-speaker-setup">
+                                 <div id="speaker-manager-root"></div>
+                                 <p class="setting-description" style="text-align: center; margin-top: 1rem; color: var(--info-color);">
+                                   Tip: Paste your script and use the ✨ button to auto-setup speakers!
+                                 </p>
+                            </div>
+                             <div id="single-speaker-setup" class="hidden">
+                                <div class="settings-grid" style="margin-bottom: 1rem; grid-template-columns: 1fr 1fr;">
+                                    <div class="setting-item" style="grid-column: 1 / -1;">
+                                        <label for="story-voice-profile-select">Voice Profile</label>
+                                        <select id="story-voice-profile-select">
+                                            <option value="custom" selected>Custom Settings</option>
+                                            <optgroup label="Presets">
+                                                <option value="male">Default Male</option>
+                                                <option value="female">Default Female</option>
+                                                <option value="custom-male">Preset Male (Upbeat)</option>
+                                                <option value="custom-female">Preset Female (Calm)</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+                                   <div class="setting-item">
+                                       <label for="story-country-select">Country</label>
+                                       <select id="story-country-select">
+                                           <option value="US" selected>United States</option>
+                                           <option value="IN">India</option>
+                                           <option value="ES">Spain</option>
+                                           <option value="FR">France</option>
+                                           <option value="DE">Germany</option>
+                                           <option value="JP">Japan</option>
+                                           <option value="CN">China</option>
+                                       </select>
+                                   </div>
+                                   <div class="setting-item">
+                                       <label for="story-language-select">Language</label>
+                                       <div class="select-wrapper">
+                                           <select id="story-language-select"></select>
+                                       </div>
+                                   </div>
+                                   <div class="setting-item" style="grid-column: 1 / -1;">
+                                       <label for="story-voice-select">Voice</label>
+                                       <div class="select-wrapper">
+                                           <select id="story-voice-select">
+                                               <!-- Voices will be populated by script -->
+                                           </select>
+                                           <button class="icon-btn voice-preview-btn" aria-label="Preview selected voice" title="Preview Voice">
+                                                <svg class="icon-play-preview" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                                <div class="spinner-small hidden"></div>
+                                           </button>
+                                       </div>
+                                   </div>
+                                   <div id="story-single-voice-controls" class="setting-item" style="grid-column: 1 / -1;">
+                                       <!-- Voice Controls will be injected here -->
+                                   </div>
+                                   <div class="setting-item" style="grid-column: 1 / -1;">
+                                       <label class="switch-label">
+                                           <input type="checkbox" id="story-ai-toggle" checked>
+                                           <span class="switch-slider"></span>
+                                           AI Dialogue Intelligence
+                                       </label>
+                                       <p class="setting-description" style="margin-top: 0.5rem; margin-bottom: 0;">
+                                           When enabled, the AI interprets vocal cues (**bold**, *italic*), and speaker attributes for a more dynamic performance.
+                                       </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="story-editor-column">
+                            <div class="editor-header">
+                                <h2>Story Script</h2>
+                                <div class="toolbar-container" data-editor-id="story"></div>
+                           </div>
+                           <div class="editor-container" id="story-script-input-container"></div>
+                           <div class="editor-footer">
+                                <button class="icon-btn" id="analyze-script-btn" aria-label="Analyze Script & Setup Speakers" title="Analyze Script & Setup Speakers">
+                                    <svg class="icon-analyze" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4V2m0 14v-2m-7.5-1.5L6 11m12 3.5 1.5 1.5M2 15h2m16 0h2M7 6.5 5.5 5m13 13L17 16.5"></path><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"></path><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path></svg>
+                                    <div class="spinner-small hidden"></div>
+                                </button>
+                                <button class="secondary-btn" id="ai-scriptwriter-btn" style="gap: 0.5rem; padding: 0.5rem 1rem;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8-5.8 1.9 5.8 1.9 1.9 5.8 1.9-5.8 5.8-1.9-5.8-1.9z"></path><path d="m5 3 1 2.9"></path><path d="m19 21-1-2.9"></path><path d="m21 12-2.9-1"></path><path d="M3 12h2.9"></path><path d="m5 21 1-2.9"></path></svg>
+                                    <span>AI Scriptwriter</span>
+                                </button>
+                                <span class="editor-char-count" data-editor-id="story">Chars: 0</span>
+                           </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content" id="poetry-content">
+                    <div class="editor-header">
+                        <h2>Poetry Recitation</h2>
+                         <div class="toolbar-container" data-editor-id="poetry"></div>
+                    </div>
+                    <div class="settings-grid poetry-only" style="margin-bottom: 1.5rem;">
+                         <div class="setting-item">
+                            <label for="genre-select">Poetry Genre</label>
+                            <select id="genre-select">
+                                <option value="sonnet">Sonnet</option>
+                                <option value="haiku">Haiku</option>
+                                <option value="limerick">Limerick</option>
+                                <option value="free verse">Free Verse</option>
+                                <option value="epic">Epic</option>
+                                <option value="ballad">Ballad</option>
+                            </select>
+                         </div>
+                          <div class="setting-item">
+                            <label for="region-select">Recitation Style (Accent)</label>
+                            <select id="region-select">
+                                <optgroup label="American">
+                                    <option value="american-standard" selected>American (Standard)</option>
+                                    <option value="american-southern">American (Southern)</option>
+                                    <option value="american-californian">American (Californian)</option>
+                                    <option value="american-new-york">American (New York)</option>
+                                </optgroup>
+                                <optgroup label="British">
+                                    <option value="british-rp">British (RP)</option>
+                                    <option value="british-cockney">British (Cockney)</option>
+                                    <option value="british-scottish">British (Scottish)</option>
+                                    <option value="british-scouse">British (Scouse)</option>
+                                    <option value="british-yorkshire">British (Yorkshire)</option>
+                                </optgroup>
+                                <optgroup label="Irish">
+                                    <option value="irish-dublin">Irish (Dublin)</option>
+                                    <option value="irish-cork">Irish (Cork)</option>
+                                </optgroup>
+                                <optgroup label="Indian">
+                                    <option value="indian-generic">Indian (Metropolitan)</option>
+                                    <option value="indian-hindi">Indian (Hindi Influence)</option>
+                                    <option value="indian-bengali">Indian (Bengali Influence)</option>
+                                    <option value="indian-tamil">Indian (Tamil Influence)</option>
+                                </optgroup>
+                                <optgroup label="Other World Accents">
+                                    <option value="australian-general">Australian</option>
+                                    <option value="canadian">Canadian</option>
+                                    <option value="south-african">South African</option>
+                                    <option value="nigerian">Nigerian</option>
+                                    <option value="jamaican">Jamaican</option>
+                                    <option value="french">French Accent</option>
+                                    <option value="spanish">Spanish Accent</option>
+                                </optgroup>
+                            </select>
+                         </div>
+                    </div>
+                     <div class="editor-container" id="poetry-input-container"></div>
+                     <div class="editor-footer">
+                        <span class="editor-char-count" data-editor-id="poetry">Chars: 0</span>
+                     </div>
+                </div>
+            </div>
+
+            <div class="studio-panel" id="settings-panel">
+                 <div class="loading-overlay hidden">
+                    <div class="spinner"></div>
+                </div>
+                <div class="settings-scroll-container">
+                    <div data-tabs="tts,poetry" class="setting-item" style="grid-column: 1 / -1;">
+                        <label for="voice-profile-select">Voice Profile</label>
+                        <select id="voice-profile-select">
+                            <option value="custom" selected>Custom Settings</option>
+                            <optgroup label="Presets">
+                                <option value="male">Default Male</option>
+                                <option value="female">Default Female</option>
+                                <option value="custom-male">Preset Male (Upbeat)</option>
+                                <option value="custom-female">Preset Female (Calm)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="settings-grid">
+                        <div data-tabs="tts,poetry" class="setting-item">
+                            <label for="country-select">Country</label>
+                            <select id="country-select">
+                                <option value="US" selected>United States</option>
+                                <option value="IN">India</option>
+                                <option value="ES">Spain</option>
+                                <option value="FR">France</option>
+                                <option value="DE">Germany</option>
+                                <option value="JP">Japan</option>
+                                <option value="CN">China</option>
+                            </select>
+                        </div>
+                        <div data-tabs="tts,poetry" class="setting-item">
+                            <label for="language-select">Language</label>
+                             <div class="select-wrapper">
+                                <select id="language-select"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div data-tabs="tts,poetry" class="setting-item" style="margin-top: 1.5rem;">
+                        <label for="voice-select">Voice</label>
+                        <div class="select-wrapper">
+                           <select id="voice-select">
+                               <!-- Voices will be populated by script -->
+                           </select>
+                            <button class="icon-btn voice-preview-btn" aria-label="Preview selected voice" title="Preview Voice">
+                                <svg class="icon-play-preview" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                <div class="spinner-small hidden"></div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="tts-voice-controls" data-tabs="tts">
+                        <!-- Voice Controls will be injected here -->
+                    </div>
+                     <div id="poetry-voice-controls" data-tabs="poetry">
+                        <!-- Voice Controls will be injected here -->
+                    </div>
+
+                    <fieldset id="accent-tuning-controls" data-tabs="poetry" class="voice-controls-fieldset" style="margin-top: 1rem;">
+                        <legend>Accent Tuning</legend>
+                        <div class="slider-item">
+                            <div class="slider-label">
+                               <label for="vowel-pronunciation-slider">Vowel Pronunciation</label>
+                               <span class="slider-value" id="vowel-pronunciation-value">Moderate</span>
+                           </div>
+                           <input type="range" id="vowel-pronunciation-slider" class="voice-control-slider" min="0" max="100" value="50" step="1">
+                        </div>
+                         <div class="slider-item">
+                            <div class="slider-label">
+                               <label for="rhythm-intensity-slider">Rhythm Intensity</label>
+                               <span class="slider-value" id="rhythm-intensity-value">Natural</span>
+                           </div>
+                           <input type="range" id="rhythm-intensity-slider" class="voice-control-slider" min="0" max="100" value="50" step="1">
+                        </div>
+                    </fieldset>
+
+                    <div data-tabs="tts" class="setting-item">
+                       <label for="narration-style-select">Narration Style</label>
+                       <select id="narration-style-select">
+                           <option value="default" selected>Default</option>
+                           <option value="news">News Anchor</option>
+                           <option value="documentary">Documentary</option>
+                           <option value="audiobook">Audiobook</option>
+                           <option value="trailer">Movie Trailer</option>
+                           <option value="asmr">ASMR Whisper</option>
+                           <option value="radio_dj">Radio DJ</option>
+                           <option value="sports">Sports Commentator</option>
+                           <option value="meditation">Meditation Guide</option>
+                           <option value="elearning">E-learning Instructor</option>
+                       </select>
+                    </div>
+
+                    <div data-tabs="tts" class="setting-item">
+                         <label class="switch-label">
+                           <input type="checkbox" id="tts-hinglish-toggle">
+                           <span class="switch-slider"></span>
+                           Hinglish Support
+                       </label>
+                        <p class="setting-description">
+                           Improves pronunciation of Hindi and English words mixed together.
+                       </p>
+                    </div>
+
+                    <hr data-tabs="tts,poetry,story" style="border-color: var(--border-color); margin: 2rem 0;">
+
+                    <div id="emotion-lab" data-tabs="tts,poetry,story">
+                        <fieldset>
+                             <legend>Emotion Lab</legend>
+                             <div class="emotion-lab-header">
+                                 <div class="header-controls">
+                                     <label for="emotion-preset-select">Emotion Presets</label>
+                                     <select id="emotion-preset-select">
+                                         <option value="custom" selected>Custom</option>
+                                         <optgroup label="Standard">
+                                             <option value="happy-excited">Happy & Excited</option>
+                                             <option value="sad-concerned">Sad & Concerned</option>
+                                             <option value="sarcastic-annoyed">Sarcastic & Annoyed</option>
+                                             <option value="suspenseful-fearful">Suspenseful & Fearful</option>
+                                         </optgroup>
+                                     </select>
+                                 </div>
+                                 <div id="emotion-visualizer" title="Emotion Color Mix"></div>
+                             </div>
+                             <div id="emotion-controls-container" style="margin-top: 1rem;">
+                                <!-- Emotion controls will be added here -->
+                             </div>
+                             <button id="add-emotion-btn" class="secondary-btn" style="width: 100%; margin-top: 1rem; justify-content: center; gap: 0.5rem;">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                 Add Emotion
+                             </button>
+                             <p id="emotion-lab-message" class="setting-description hidden" style="text-align: center; margin-top: 1rem; color: var(--info-color);">
+                                 Emotion Lab is disabled for AI Storyteller and Hinglish modes.
+                             </p>
+                        </fieldset>
+                    </div>
+
+                     <hr data-tabs="tts,poetry,story" style="border-color: var(--border-color); margin: 2rem 0;">
+
+                    <div id="audio-lab" data-tabs="tts,poetry,story">
+                        <h2>Audio Lab</h2>
+                        <div class="setting-item">
+                            <label for="bgm-select">Background Music</label>
+                            <select id="bgm-select">
+                                <option value="none" selected>None</option>
+                                <optgroup label="Atmospheric">
+                                    <option value="https://storage.googleapis.com/maker-suit-tools-prototypes/vedoice/ambient-rain.mp3">Ambient Rain</option>
+                                    <option value="https://storage.googleapis.com/maker-suit-tools-prototypes/vedoice/calm-piano.mp3">Calm Piano</option>
+                                    <option value="https://storage.googleapis.com/maker-suit-tools-prototypes/vedoice/sci-fi-drone.mp3">Sci-Fi Drone</option>
+                                </optgroup>
+                                <optgroup label="Dramatic">
+                                     <option value="https://storage.googleapis.com/maker-suit-tools-prototypes/vedoice/epic-orchestra.mp3">Epic Orchestra</option>
+                                     <option value="https://storage.googleapis.com/maker-suit-tools-prototypes/vedoice/suspense-strings.mp3">Suspense Strings</option>
+                                     <option value="https://storage.googleapis.com/maker-suit-tools-prototypes/vedoice/action-beats.mp3">Action Beats</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="slider-item">
+                             <div class="slider-label">
+                                <label for="bgm-volume-slider">BGM Volume</label>
+                                <span id="bgm-volume-value">50%</span>
+                            </div>
+                            <input type="range" id="bgm-volume-slider" class="voice-control-slider" min="0" max="100" value="50">
+                        </div>
+
+                        <div id="audio-effects-lab">
+                             <div class="effect-control">
+                                 <label class="switch-label">
+                                   <input type="checkbox" id="reverb-toggle" data-controls="reverb-params">
+                                   <span class="switch-slider"></span>
+                                   Reverb
+                                 </label>
+                                 <div id="reverb-params" class="effect-params-container hidden">
+                                      <div class="effect-slider-container">
+                                        <label for="reverb-mix-slider">Wet/Dry Mix</label>
+                                        <input type="range" id="reverb-mix-slider" class="voice-control-slider" min="0" max="1" value="0.5" step="0.01">
+                                        <span class="slider-value" id="reverb-mix-value">50%</span>
+                                    </div>
+                                 </div>
+                             </div>
+                              <div class="effect-control">
+                                 <label class="switch-label">
+                                   <input type="checkbox" id="echo-toggle" data-controls="echo-params">
+                                   <span class="switch-slider"></span>
+                                   Echo / Delay
+                                 </label>
+                                 <div id="echo-params" class="effect-params-container hidden">
+                                     <div class="effect-slider-container">
+                                        <label for="echo-delay-slider">Delay Time</label>
+                                        <input type="range" id="echo-delay-slider" class="voice-control-slider" min="0.0" max="2.0" value="0.5" step="0.01">
+                                        <span class="slider-value" id="echo-delay-value">0.50s</span>
+                                    </div>
+                                     <div class="effect-slider-container">
+                                        <label for="echo-feedback-slider">Feedback</label>
+                                        <input type="range" id="echo-feedback-slider" class="voice-control-slider" min="0" max="0.9" value="0.45" step="0.01">
+                                         <span class="slider-value" id="echo-feedback-value">45%</span>
+                                    </div>
+                                 </div>
+                             </div>
+                              <div class="effect-control">
+                                 <label class="switch-label">
+                                   <input type="checkbox" id="bass-boost-toggle" data-controls="bass-boost-params">
+                                   <span class="switch-slider"></span>
+                                   Bass Boost
+                                 </label>
+                                 <div id="bass-boost-params" class="effect-params-container hidden">
+                                     <div class="effect-slider-container">
+                                        <label for="bass-boost-gain-slider">Gain</label>
+                                        <input type="range" id="bass-boost-gain-slider" class="voice-control-slider" min="0" max="24" value="10" step="1">
+                                         <span class="slider-value" id="bass-boost-gain-value">10 dB</span>
+                                    </div>
+                                 </div>
+                             </div>
+                             <div class="effect-control">
+                                 <label class="switch-label">
+                                   <input type="checkbox" id="distortion-toggle" data-controls="distortion-params">
+                                   <span class="switch-slider"></span>
+                                   Distortion
+                                 </label>
+                                 <div id="distortion-params" class="effect-params-container hidden">
+                                     <div class="effect-slider-container">
+                                        <label for="distortion-amount-slider">Amount</label>
+                                        <input type="range" id="distortion-amount-slider" class="voice-control-slider" min="0" max="1000" value="400" step="10">
+                                         <span class="slider-value" id="distortion-amount-value">400</span>
+                                    </div>
+                                 </div>
+                             </div>
+                              <div class="effect-control">
+                                 <label class="switch-label">
+                                   <input type="checkbox" id="telephone-toggle">
+                                   <span class="switch-slider"></span>
+                                   Telephone Effect
+                                 </label>
+                             </div>
+                              <div class="effect-control">
+                                 <label class="switch-label">
+                                   <input type="checkbox" id="radio-static-toggle" data-controls="radio-static-params">
+                                   <span class="switch-slider"></span>
+                                   Radio Static
+                                 </label>
+                                  <div id="radio-static-params" class="effect-params-container hidden">
+                                     <div class="effect-slider-container">
+                                        <label for="radio-static-volume-slider">Volume</label>
+                                        <input type="range" id="radio-static-volume-slider" class="voice-control-slider" min="0" max="100" value="50" step="1">
+                                         <span class="slider-value" id="radio-static-volume-value">50%</span>
+                                    </div>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div id="player-container" class="hidden">
+                <div id="progress-bar-container" class="hidden">
+                    <div id="progress-bar"></div>
+                    <div class="progress-info">
+                        <span id="progress-text">Initializing...</span>
+                        <div class="progress-time-details">
+                            <span id="progress-elapsed">Elapsed: 0s</span>
+                        </div>
+                    </div>
+                </div>
+                <audio id="audio-player" controls class="hidden"></audio>
+                <div id="export-options" class="hidden">
+                    <div class="export-control">
+                         <label for="mp3-bitrate-select">MP3 Bitrate:</label>
+                         <select id="mp3-bitrate-select">
+                             <option value="128">128 kbps</option>
+                             <option value="192" selected>192 kbps</option>
+                             <option value="256">256 kbps</option>
+                             <option value="320">320 kbps</option>
+                         </select>
+                    </div>
+                    <button id="download-wav-btn" class="export-btn">Download .WAV</button>
+                    <button id="download-mp3-btn" class="export-btn">Download .MP3</button>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                 <div class="extra-features">
+                     <button class="footer-btn" id="my-voices-btn">My Voices</button>
+                     <button class="footer-btn" id="custom-emotions-btn">Custom Emotions</button>
+                 </div>
+                 <div class="footer-actions">
+                    <button id="reset-btn" class="secondary-btn">Reset All</button>
+                    <button id="generate-btn" class="primary-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                        <span>Generate Audio</span>
+                    </button>
+                    <button id="cancel-btn" class="secondary-btn hidden" style="background-color: var(--error-color); border-color: var(--error-color); color: white;">Cancel</button>
+                 </div>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Templates -->
+     <template id="editor-toolbar-template">
+        <div class="editor-toolbar">
+            <button class="icon-btn" data-action="undo" aria-label="Undo" title="Undo" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4c0 1.1.9 2 2 2h4"></path><path d="M3.4 15A9 9 0 0 1 20.7 7.5"></path></svg>
+            </button>
+            <button class="icon-btn" data-action="redo" aria-label="Redo" title="Redo" disabled>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10v4c0 1.1-.9 2-2 2h-4"></path><path d="M20.6 15A9 9 0 0 0 3.3 7.5"></path></svg>
+            </button>
+            <div class="toolbar-divider"></div>
+            <button class="icon-btn" data-action="add-speaker" aria-label="Add Speaker" title="Add Speaker Tag">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            </button>
+            <button class="icon-btn" data-action="add-cue" aria-label="Add Vocal Cue" title="Add Vocal Cue (e.g., 'angrily')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2.1C5.6 2.6 2.6 5.6 2.1 9.5"></path><path d="M14.5 21.9c3.9-.5 6.9-3.5 7.4-7.4"></path><path d="M21.9 14.5c-.5 3.9-3.5 6.9-7.4 7.4"></path><path d="M2.1 14.5c.5-3.9 3.5-6.9 7.4-7.4"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+            </button>
+            <button class="icon-btn" data-action="add-directive" aria-label="Add AI Directive" title="Add AI Directive Note">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            </button>
+             <div class="toolbar-divider"></div>
+             <button class="icon-btn" data-action="clear" aria-label="Clear Editor" title="Clear Editor">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5H9.5a2.5 2.5 0 0 0 0 5h5a2.5 2.5 0 0 1 0 5H7"></path><path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12"></path><path d="M19 18.5a3.5 3.5 0 0 1-3.5 3.5H12"></path><line x1="12" x2="12" y1="2" y2="22"></line></svg>
+            </button>
+        </div>
+    </template>
+    <template id="speaker-config-template">
+        <div class="speaker-config">
+            <input type="text" class="speaker-name" placeholder="Speaker Name">
+            <div class="select-wrapper">
+                <select class="speaker-voice"></select>
+                <button class="icon-btn voice-preview-btn" aria-label="Preview selected voice" title="Preview Voice">
+                    <svg class="icon-play-preview" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <div class="spinner-small hidden"></div>
+                </button>
+            </div>
+            <button class="icon-btn remove-speaker-btn" title="Remove Speaker">&times;</button>
+        </div>
+    </template>
+    
+    <template id="emotion-control-template">
+        <div class="emotion-control">
+             <select class="emotion-select">
+                <option value="neutral" selected>Neutral</option>
+                <optgroup label="Positive">
+                    <option value="joyful">Joyful</option><option value="amused">Amused</option><option value="excited">Excited</option><option value="enthusiastic">Enthusiastic</option><option value="confident">Confident</option><option value="hopeful">Hopeful</option><option value="calm">Calm</option><option value="playful">Playful</option><option value="proud">Proud</option>
+                </optgroup>
+                <optgroup label="Negative">
+                    <option value="sad">Sad</option><option value="angry">Angry</option><option value="fearful">Fearful</option><option value="concerned">Concerned</option><option value="disappointed">Disappointed</option><option value="anxious">Anxious</option><option value="annoyed">Annoyed</option>
+                </optgroup>
+                <optgroup label="Complex/Other">
+                    <option value="sarcastic">Sarcastic</option><option value="surprised">Surprised</option><option value="suspenseful">Suspenseful</option><option value="skeptical">Skeptical</option><option value="thoughtful">Thoughtful</option>
+                </optgroup>
+                 <optgroup label="Styles">
+                    <option value="whisper">Whisper</option><option value="authoritative">Authoritative</option><option value="cinematic">Cinematic</option>
+                </optgroup>
+            </select>
+            <div class="slider-container">
+                <input type="range" class="voice-control-slider emotion-intensity" min="0" max="100" value="50" step="1">
+                <span class="slider-value">50%</span>
+            </div>
+            <button class="icon-btn remove-emotion-btn" title="Remove Emotion">&times;</button>
+        </div>
+    </template>
+    
+    <template id="voice-control-template">
+        <fieldset class="voice-controls-fieldset">
+            <legend>Voice Controls</legend>
+            <div class="slider-item">
+                <div class="slider-label">
+                   <label class="speech-rate-label">Speech Rate</label>
+                   <span class="slider-value speech-rate-value">1.00x</span>
+               </div>
+               <input type="range" class="voice-control-slider speech-rate-slider" min="0.5" max="2.0" value="1.0" step="0.05">
+                <div class="rate-presets">
+                    <button class="rate-btn" data-value="0.75">Slow</button>
+                    <button class="rate-btn active" data-value="1.0">Normal</button>
+                    <button class="rate-btn" data-value="1.25">Fast</button>
+                    <button class="rate-btn" data-value="1.5">Very Fast</button>
+                </div>
+            </div>
+             <div class="slider-item">
+                <div class="slider-label">
+                   <label class="pitch-shift-label">Pitch Shift</label>
+                   <span class="slider-value pitch-shift-value">+0 cents</span>
+               </div>
+               <input type="range" class="voice-control-slider pitch-shift-slider" min="-1200" max="1200" value="0" step="100">
+            </div>
+            <div class="slider-item">
+                <div class="slider-label">
+                   <label class="volume-label">Volume</label>
+                   <span class="slider-value volume-value">100%</span>
+               </div>
+               <input type="range" class="voice-control-slider volume-slider" min="0" max="1.5" value="1.0" step="0.05">
+            </div>
+        </fieldset>
+    </template>
+    
+    <template id="custom-emotion-item-template">
+        <div class="custom-emotion-item">
+            <div class="emotion-item-preview" title="Emotion Color Mix"></div>
+            <span class="emotion-item-name"></span>
+            <div class="emotion-item-actions">
+                <button class="secondary-btn apply-custom-emotion-btn">Apply</button>
+                <button class="icon-btn delete-custom-emotion-btn" title="Delete Blend">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <!-- Modals -->
+    <div id="ai-scriptwriter-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+             <div class="loading-overlay hidden">
+                <div class="spinner"></div>
+            </div>
+            <button id="close-scriptwriter-modal" class="modal-close-btn">&times;</button>
+            <h2 class="modal-title">AI Scriptwriter</h2>
+            <p class="modal-description">Provide a brief plot outline, and the AI will generate a multi-character script formatted for Vedoice.</p>
+            <div class="setting-item">
+                <label for="plot-outline-input">Plot Outline</label>
+                <textarea id="plot-outline-input" placeholder="e.g., A detective investigates a mysterious jewel theft on a luxury space cruiser. The main suspects are a retired general, a famous actress, and the ship's quirky AI."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button id="generate-script-btn" class="primary-btn">
+                     <span class="spinner-small hidden" style="margin-right: 0.5rem;"></span>
+                    Generate Script
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="my-voices-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="close-voices-modal" class="modal-close-btn">&times;</button>
+            <h2 class="modal-title">My Voices (Coming Soon)</h2>
+            <p class="modal-description">This feature will allow you to clone your own voice or create unique custom AI voices. Stay tuned for future updates!</p>
+        </div>
+    </div>
+    
+    <div id="custom-emotions-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button id="close-emotions-modal" class="modal-close-btn">&times;</button>
+            <h2 class="modal-title">Custom Emotions</h2>
+            <p class="modal-description">Create and save your own complex emotional blends for easy reuse in your projects.</p>
+            
+            <div class="custom-emotion-creator">
+                <h3>Create New Blend</h3>
+                <p class="setting-description">The current settings from the Emotion Lab will be saved as a new preset.</p>
+                <div class="create-emotion-form">
+                    <input type="text" id="new-custom-emotion-name" placeholder="Enter Blend Name (e.g., 'Wistful Joy')">
+                    <button id="save-custom-emotion-btn" class="secondary-btn">Save Current Blend</button>
+                </div>
+            </div>
+
+            <hr style="border-color: var(--border-color); margin: 2rem 0;">
+
+            <div class="custom-emotions-manager">
+                <h3>My Blends</h3>
+                <div id="custom-emotions-list">
+                    <!-- Items will be populated here -->
+                    <p id="no-custom-emotions" class="setting-description">You haven't saved any custom emotion blends yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
