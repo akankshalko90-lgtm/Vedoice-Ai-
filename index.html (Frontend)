@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gemini AI App</title>
+</head>
+<body>
+  <h1>Gemini AI Test</h1>
+  <textarea id="prompt" placeholder="Type something..."></textarea>
+  <button onclick="sendPrompt()">Send</button>
+  <pre id="output"></pre>
+
+  <script src="script.js"></script>
+</body>
+</html>
