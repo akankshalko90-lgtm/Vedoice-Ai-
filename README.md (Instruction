@@ -1,0 +1,18 @@
+# Gemini AI App
+
+## Setup
+
+1. Upload files to GitHub repository:
+   - `index.html`
+   - `script.js`
+   - `netlify/functions/gemini.js`
+
+2. In Netlify dashboard:
+   - Site Settings → Environment → Variables
+   - Add variable:
+     ```
+     Name: GEMINI_API_KEY
+     Value: YOUR_ACTUAL_API_KEY_HERE
+     ```
+3. Site automatically deploys when files are pushed to GitHub.
+4. Open site → type prompt → click Send → see output.
