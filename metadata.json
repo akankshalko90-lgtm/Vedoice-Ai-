@@ -1,0 +1,5 @@
+{
+  "name": "Vedoice AI",
+  "description": "Vedoice AI is an advanced audio generation web application leveraging the Gemini API to provide limitless text-to-speech conversion with multiple voice options, designed for an elegant user experience.",
+  "requestFramePermissions": []
+}
